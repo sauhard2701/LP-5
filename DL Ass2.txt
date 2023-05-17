@@ -1,0 +1,68 @@
+from keras.datasets import fashion_mnist
+from keras.models import Sequential
+from keras.layers import Dense,Conv2D,Dropout,MaxPooling2D,Flatten
+from keras.utils import np_utils
+
+-----------------------------------
+(x_train, y_train), (x_test, y_test) = fashion_mnist.load_data()
+
+-----------------------------------
+trainX = x_train.reshape((x_train.shape[0], 28, 28, 1))
+testX = x_test.reshape((x_test.shape[0], 28, 28, 1))
+trainX = trainX/255
+testX = testX/255
+
+-----------------------------------
+import matplotlib.pyplot as plt
+%matplotlib inline
+plt.imshow(x_test[2])
+
+-----------------------------------
+trainY = np_utils.to_categorical(y_train,10)
+testY = np_utils.to_categorical(y_test,10)
+
+-----------------------------------
+classifier = Sequential()
+classifier.add(Conv2D(filters=32, kernel_size=(3,3),strides=(1, 1), input_shape=(28,28,1), activation='relu'))
+classifier.add(MaxPooling2D(pool_size=(2,2)))
+classifier.add(Conv2D(filters=64, kernel_size=(3,3),strides=(1, 1), activation='relu'))
+classifier.add(MaxPooling2D(pool_size=(2,2)))
+classifier.add(Flatten())
+classifier.add(Dense(units=128,activation='relu'))
+classifier.add(Dropout(rate=0.2))
+classifier.add(Dense(units=10, activation='softmax'))
+
+-----------------------------------
+classifier.compile(optimizer='adam',loss='categorical_crossentropy',metrics=['accuracy'])
+
+-----------------------------------
+classifier.summary()
+
+-----------------------------------
+history = classifier.fit(trainX, trainY,
+ batch_size=128, epochs=20,
+ verbose=2,
+ validation_data=(testX, testY))
+
+-----------------------------------
+# 0: T-shirt/top
+# 1: Trouser
+# 2: Pullover
+# 3: Dress
+# 4: Coat
+# 5: Sandal
+# 6: Shirt
+# 7: Sneaker
+# 8: Bag
+# 9: Ankle boot
+
+-----------------------------------
+from keras.preprocessing import image
+import numpy as np
+test_img = image.load_img('bag.png', target_size=(28, 28))
+test_img = image.img_to_array(test_img)
+test_img = test_img[:,:,1].reshape(1,28,28,1)
+test_img = test_img/255
+# classifier.predict_classes(test_img)
+# (classifier.predict(test_img) > 0.5).astype("int32")
+np.argmax(classifier.predict(test_img), axis=-1)
