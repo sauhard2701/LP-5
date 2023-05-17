@@ -11,4 +11,4 @@ Run the program as (gcc or g++):
 ## For HPC Assignment 4
 
 Use GPU on colab
-<br> Runtime > Change Runtime Type . Select GPU from drop-down
+<br> Runtime > Change Runtime Type > Select GPU from drop-down
