@@ -13,7 +13,7 @@ Run the program as (gcc or g++):
 Use GPU on colab
 <br> Runtime > Change Runtime Type > Select GPU from drop-down
 
-## For DL Assignments
+## For DL Assignments (datasets)
 - Ass1 - housing.csv
 - Ass2 - MNIST data (loads from libs)
 - Ass3 - trainset.csv , testset.csv
