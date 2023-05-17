@@ -15,5 +15,5 @@ Use GPU on colab
 
 ## For DL Assignments (datasets)
 - Ass1 - housing.csv
-- Ass2 - MNIST data (loads from libs)
+- Ass2 - bag.png (for testing)
 - Ass3 - trainset.csv , testset.csv
