@@ -1,0 +1,157 @@
+!nvcc --version
+
+-----------------------------------------------
+!pip install git+https://github.com/andreinechaev/nvcc4jupyter.git
+
+-----------------------------------------------
+%load_ext nvcc_plugin
+
+-----------------------------------------------
+# VECTOR ADDITION
+%%cu
+
+#include <stdio.h>
+
+// CUDA kernel for vector addition
+__global__ void vectorAdd(int* a, int* b, int* c, int size) 
+{
+    int tid = blockIdx.x * blockDim.x + threadIdx.x;
+    if (tid < size) {
+        c[tid] = a[tid] + b[tid];
+    }
+}
+
+int main() 
+{
+    int size = 100;  // Size of the vectors
+    int* a, * b, * c;    // Host vectors
+    int* dev_a, * dev_b, * dev_c;  // Device vectors
+
+    // Allocate memory for host vectors
+    a = (int*)malloc(size * sizeof(int));
+    b = (int*)malloc(size * sizeof(int));
+    c = (int*)malloc(size * sizeof(int));
+
+    // Initialize host vectors
+    for (int i = 0; i < size; i++) {
+        a[i] = i;
+        b[i] = 2 * i;
+    }
+
+    // Allocate memory on the device for device vectors
+    cudaMalloc((void**)&dev_a, size * sizeof(int));
+    cudaMalloc((void**)&dev_b, size * sizeof(int));
+    cudaMalloc((void**)&dev_c, size * sizeof(int));
+
+    // Copy host vectors to device
+    cudaMemcpy(dev_a, a, size * sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemcpy(dev_b, b, size * sizeof(int), cudaMemcpyHostToDevice);
+
+    // Launch kernel for vector addition
+    int blockSize = 256;
+    int gridSize = (size + blockSize - 1) / blockSize;
+    vectorAdd<<<gridSize, blockSize>>>(dev_a, dev_b, dev_c, size);
+
+    // Copy result from device to host
+    cudaMemcpy(c, dev_c, size * sizeof(int), cudaMemcpyDeviceToHost);
+
+    // Print result
+    for (int i = 0; i < size; i++) {
+        printf("%d + %d = %d\n", a[i], b[i], c[i]);
+    }
+
+    // Free device memory
+    cudaFree(dev_a);
+    cudaFree(dev_b);
+    cudaFree(dev_c);
+
+    // Free host memory
+    free(a);
+    free(b);
+    free(c);
+
+    return 0;
+}
+
+-----------------------------------------------
+# MATRIX MULTIPLICATION
+
+%%cu
+
+#include <stdio.h>
+
+// CUDA kernel for matrix multiplication
+__global__ void matrixMul(int* a, int* b, int* c, int rowsA, int colsA, int colsB) {
+    int row = blockIdx.y * blockDim.y + threadIdx.y;
+    int col = blockIdx.x * blockDim.x + threadIdx.x;
+    int sum = 0;
+    if (row < rowsA && col < colsB) {
+        for (int i = 0; i < colsA; i++) {
+            sum += a[row * colsA + i] * b[i * colsB + col];
+        }
+        c[row * colsB + col] = sum;
+    }
+}
+
+int main() {
+    int rowsA = 10;  // Rows of matrix A
+    int colsA = 10;  // Columns of matrix A
+    int rowsB = colsA; // Rows of matrix B
+    int colsB = 10;  // Columns of matrix B
+
+    int* a, * b, * c;  // Host matrices
+    int* dev_a, * dev_b, * dev_c;  // Device matrices
+
+    // Allocate memory for host matrices
+    a = (int*)malloc(rowsA * colsA * sizeof(int));
+    b = (int*)malloc(rowsB * colsB * sizeof(int));
+    c = (int*)malloc(rowsA * colsB * sizeof(int));
+
+    // Initialize host matrices
+    for (int i = 0; i < rowsA * colsA; i++) {
+        a[i] = i;
+    }
+    for (int i = 0; i < rowsB * colsB; i++) {
+        b[i] = 2 * i;
+    }
+
+    // Allocate memory on the device for device matrices
+    cudaMalloc((void**)&dev_a, rowsA * colsA * sizeof(int));
+    cudaMalloc((void**)&dev_b, rowsB * colsB * sizeof(int));
+    cudaMalloc((void**)&dev_c, rowsA * colsB * sizeof(int));
+
+    // Copy host matrices to device
+    cudaMemcpy(dev_a, a, rowsA * colsA * sizeof(int), cudaMemcpyHostToDevice);
+    cudaMemcpy(dev_b, b, rowsB * colsB * sizeof(int), cudaMemcpyHostToDevice);
+
+    // Define grid and block dimensions
+    dim3 blockSize(16, 16);
+    dim3 gridSize((colsB + blockSize.x - 1) / blockSize.x, (rowsA + blockSize.y - 1) / blockSize.y);
+
+    // Launch kernel for matrix multiplication
+    matrixMul<<<gridSize, blockSize>>>(dev_a, dev_b, dev_c, rowsA, colsA, colsB);
+
+    // Copy result from device to host
+    cudaMemcpy(c, dev_c, rowsA * colsB * sizeof(int), cudaMemcpyDeviceToHost);
+
+    // Print result
+    printf("Result:\n");
+    for (int i = 0; i < rowsA; i++) {
+        for (int j = 0; j < colsB; j++) {
+            printf("%d ", c[i * colsB + j]);
+        }
+        printf("\n");
+    }
+
+    // Free device memory
+    cudaFree(dev_a);
+    cudaFree(dev_b);
+    cudaFree(dev_c);
+
+    // Free host memory
+    free(a);
+    free(b);
+    free(c);
+
+    return 0;
+}
