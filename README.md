@@ -10,7 +10,7 @@ Run the program as (gcc or g++):
 
 ## For HPC Assignment 4
 
-Use GPU on colab
+Use GPU on colab and refer text file or else download the ipynb. Some part of text is ommitted on github so it's not visible.
 <br> Runtime > Change Runtime Type > Select GPU from drop-down
 
 ## For DL Assignments (datasets)
