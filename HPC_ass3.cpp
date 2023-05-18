@@ -45,12 +45,12 @@ void avg(int *arr, int n)
    float avg = 0, sum = 0;
 #pragma omp parallel reduction(+:sum)
    {
-      int id = omp_get_thread_num();
+      // int id = omp_get_thread_num();
 #pragma omp for
       for (i = 0; i < n; i++)
       {
          sum = sum + arr[i];
-         cout << "\nFor i = " << i << ", thread " << id << " is executing";
+         cout << "\nthread id = " << omp_get_thread_num() << " and i = " << i;
       }
    }
    cout << "\n\nSum = " << sum << endl;
