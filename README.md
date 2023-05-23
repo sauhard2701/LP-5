@@ -1,6 +1,10 @@
 # LP-V
 HPC and DL Pracs
+<br> On Terminal/CMD use: 
+<br> curl "https://raw.githubusercontent.com/Sauhard2701/LP-5/main/filename.txt"
 
+<br> On Jupyter use:
+<br> !curl "https://raw.githubusercontent.com/Sauhard2701/LP-5/main/filename.txt"
 
 ## For HPC Assignments 1-3
 
