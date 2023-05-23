@@ -21,6 +21,18 @@ public:
         adj[dest].push_back(src);
     }
 
+    // View the graph
+    void viewGraph() {
+        cout << "Graph:\n";
+        for (int i = 0; i < numVertices; i++) {
+            cout << "Vertex " << i << " -> ";
+            for (int neighbor : adj[i]) {
+                cout << neighbor << " ";
+            }
+            cout << endl;
+        }
+    }
+
     // Perform Breadth First Search (BFS) in parallel
     void bfs(int startVertex) {
         vector<bool> visited(numVertices, false);
@@ -73,23 +85,37 @@ public:
 };
 
 int main() {
-    // Create a graph with 7 vertices
-    Graph graph(7);
+    int numVertices;
+    cout << "Enter the number of vertices in the graph: ";
+    cin >> numVertices;
 
-    // Add edges between vertices
-    graph.addEdge(0, 1);
-    graph.addEdge(0, 2);
-    graph.addEdge(1, 3);
-    graph.addEdge(1, 4);
-    graph.addEdge(2, 5);
-    graph.addEdge(2, 6);
+    // Create a graph with the specified number of vertices
+    Graph graph(numVertices);
+
+    int numEdges;
+    cout << "Enter the number of edges in the graph: ";
+    cin >> numEdges;
+
+    cout << "Enter the edges (source destination):\n";
+    for (int i = 0; i < numEdges; i++) {
+        int src, dest;
+        cin >> src >> dest;
+        graph.addEdge(src, dest);
+    }
+
+    // View the graph
+    graph.viewGraph();
+
+    int startVertex;
+    cout << "Enter the starting vertex for BFS and DFS: ";
+    cin >> startVertex;
 
     cout << "Breadth First Search (BFS): ";
-    graph.bfs(0);
+    graph.bfs(startVertex);
     cout << endl;
 
     cout << "Depth First Search (DFS): ";
-    graph.dfs(0);
+    graph.dfs(startVertex);
     cout << endl;
 
     return 0;
