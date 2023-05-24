@@ -1,68 +1,224 @@
 from keras.datasets import fashion_mnist
-from keras.models import Sequential
-from keras.layers import Dense,Conv2D,Dropout,MaxPooling2D,Flatten
-from keras.utils import np_utils
+(train_X,train_Y), (test_X,test_Y) = fashion_mnist.load_data()
 
------------------------------------
-(x_train, y_train), (x_test, y_test) = fashion_mnist.load_data()
-
------------------------------------
-trainX = x_train.reshape((x_train.shape[0], 28, 28, 1))
-testX = x_test.reshape((x_test.shape[0], 28, 28, 1))
-trainX = trainX/255
-testX = testX/255
-
------------------------------------
+-----------------------------------------------------------------
+import numpy as np
+from keras.utils import to_categorical
 import matplotlib.pyplot as plt
 %matplotlib inline
-plt.imshow(x_test[2])
 
------------------------------------
-trainY = np_utils.to_categorical(y_train,10)
-testY = np_utils.to_categorical(y_test,10)
+print('Training data shape : ', train_X.shape, train_Y.shape)
 
------------------------------------
-classifier = Sequential()
-classifier.add(Conv2D(filters=32, kernel_size=(3,3),strides=(1, 1), input_shape=(28,28,1), activation='relu'))
-classifier.add(MaxPooling2D(pool_size=(2,2)))
-classifier.add(Conv2D(filters=64, kernel_size=(3,3),strides=(1, 1), activation='relu'))
-classifier.add(MaxPooling2D(pool_size=(2,2)))
-classifier.add(Flatten())
-classifier.add(Dense(units=128,activation='relu'))
-classifier.add(Dropout(rate=0.2))
-classifier.add(Dense(units=10, activation='softmax'))
+print('Testing data shape : ', test_X.shape, test_Y.shape)
 
------------------------------------
-classifier.compile(optimizer='adam',loss='categorical_crossentropy',metrics=['accuracy'])
+-----------------------------------------------------------------
+# Find the unique numbers from the train labels
+classes = np.unique(train_Y)
+nClasses = len(classes)
+print('Total number of outputs : ', nClasses)
+print('Output classes : ', classes)
 
------------------------------------
-classifier.summary()
+-----------------------------------------------------------------
+plt.figure(figsize=[5,5])
 
------------------------------------
-history = classifier.fit(trainX, trainY,
- batch_size=128, epochs=20,
- verbose=2,
- validation_data=(testX, testY))
+# Display the first image in training data
+plt.subplot(121)
+plt.imshow(train_X[0,:,:], cmap='gray')
+plt.title("Ground Truth : {}".format(train_Y[0]))
 
------------------------------------
-# 0: T-shirt/top
-# 1: Trouser
-# 2: Pullover
-# 3: Dress
-# 4: Coat
-# 5: Sandal
-# 6: Shirt
-# 7: Sneaker
-# 8: Bag
-# 9: Ankle boot
+# Display the first image in testing data
+plt.subplot(122)
+plt.imshow(test_X[0,:,:], cmap='gray')
+plt.title("Ground Truth : {}".format(test_Y[0]))
 
------------------------------------
-from keras.preprocessing import image
-import numpy as np
-test_img = image.load_img('bag.png', target_size=(28, 28))
-test_img = image.img_to_array(test_img)
-test_img = test_img[:,:,1].reshape(1,28,28,1)
-test_img = test_img/255
-# classifier.predict_classes(test_img)
-# (classifier.predict(test_img) > 0.5).astype("int32")
-np.argmax(classifier.predict(test_img), axis=-1)
+-----------------------------------------------------------------
+train_X = train_X.reshape(-1, 28,28, 1)
+test_X = test_X.reshape(-1, 28,28, 1)
+train_X.shape, test_X.shape
+
+-----------------------------------------------------------------
+train_X = train_X.astype('float32')
+test_X = test_X.astype('float32')
+train_X = train_X / 255.
+test_X = test_X / 255.
+
+-----------------------------------------------------------------
+# Change the labels from categorical to one-hot encoding
+train_Y_one_hot = to_categorical(train_Y)
+test_Y_one_hot = to_categorical(test_Y)
+
+# Display the change for category label using one-hot encoding
+print('Original label:', train_Y[0])
+print('After conversion to one-hot:', train_Y_one_hot[0])
+
+
+-----------------------------------------------------------------
+from sklearn.model_selection import train_test_split
+train_X,valid_X,train_label,valid_label = train_test_split(train_X, train_Y_one_hot, test_size=0.2, random_state=13)
+
+-----------------------------------------------------------------
+train_X.shape,valid_X.shape,train_label.shape,valid_label.shape
+
+-----------------------------------------------------------------
+import keras
+from keras.models import Sequential
+from keras.layers import Dense, Dropout, Flatten
+from keras.layers import Conv2D, MaxPooling2D
+from tensorflow.keras.layers import BatchNormalization
+#from keras.layers.normalization import BatchNormalization
+#from keras.layers.advanced_activations import LeakyReLU
+from keras.layers import LeakyReLU
+
+-----------------------------------------------------------------
+#from keras.models import Input
+from keras.models import Model
+
+-----------------------------------------------------------------
+batch_size = 64
+epochs = 20
+num_classes = 10
+
+-----------------------------------------------------------------
+fashion_model = Sequential()
+fashion_model.add(Conv2D(32, kernel_size=(3, 3),activation='linear',input_shape=(28,28,1),padding='same'))
+fashion_model.add(LeakyReLU(alpha=0.1))
+fashion_model.add(MaxPooling2D((2, 2),padding='same'))
+fashion_model.add(Conv2D(64, (3, 3), activation='linear',padding='same'))
+fashion_model.add(LeakyReLU(alpha=0.1))
+fashion_model.add(MaxPooling2D(pool_size=(2, 2),padding='same'))
+fashion_model.add(Conv2D(128, (3, 3), activation='linear',padding='same'))
+fashion_model.add(LeakyReLU(alpha=0.1))                  
+fashion_model.add(MaxPooling2D(pool_size=(2, 2),padding='same'))
+fashion_model.add(Flatten())
+fashion_model.add(Dense(128, activation='linear'))
+fashion_model.add(LeakyReLU(alpha=0.1))                  
+fashion_model.add(Dense(num_classes, activation='softmax'))
+
+
+-----------------------------------------------------------------
+fashion_model.compile(loss=keras.losses.categorical_crossentropy, optimizer=keras.optimizers.Adam(),metrics=['accuracy'])
+
+-----------------------------------------------------------------
+fashion_model.summary()
+
+-----------------------------------------------------------------
+fashion_train = fashion_model.fit(train_X, train_label, batch_size=batch_size,epochs=epochs,verbose=1,validation_data=(valid_X, valid_label))
+
+-----------------------------------------------------------------
+test_eval = fashion_model.evaluate(test_X, test_Y_one_hot, verbose=0)
+
+-----------------------------------------------------------------
+print('Test loss:', test_eval[0])
+print('Test accuracy:', test_eval[1])
+
+-----------------------------------------------------------------
+accuracy = fashion_train.history['accuracy']
+val_accuracy = fashion_train.history['val_accuracy']
+loss = fashion_train.history['loss']
+val_loss = fashion_train.history['val_loss']
+epochs = range(len(accuracy))
+plt.plot(epochs, accuracy, 'bo', label='Training accuracy')
+plt.plot(epochs, val_accuracy, 'b', label='Validation accuracy')
+plt.title('Training and validation accuracy')
+plt.legend()
+plt.figure()
+plt.plot(epochs, loss, 'bo', label='Training loss')
+plt.plot(epochs, val_loss, 'b', label='Validation loss')
+plt.title('Training and validation loss')
+plt.legend()
+plt.show()
+
+-----------------------------------------------------------------
+# Adding Dropout into the Network
+batch_size = 64
+epochs = 20
+num_classes = 10
+
+-----------------------------------------------------------------
+fashion_model = Sequential()
+fashion_model.add(Conv2D(32, kernel_size=(3, 3),activation='linear',padding='same',input_shape=(28,28,1)))
+fashion_model.add(LeakyReLU(alpha=0.1))
+fashion_model.add(MaxPooling2D((2, 2),padding='same'))
+fashion_model.add(Dropout(0.25))
+fashion_model.add(Conv2D(64, (3, 3), activation='linear',padding='same'))
+fashion_model.add(LeakyReLU(alpha=0.1))
+fashion_model.add(MaxPooling2D(pool_size=(2, 2),padding='same'))
+fashion_model.add(Dropout(0.25))
+fashion_model.add(Conv2D(128, (3, 3), activation='linear',padding='same'))
+fashion_model.add(LeakyReLU(alpha=0.1))                  
+fashion_model.add(MaxPooling2D(pool_size=(2, 2),padding='same'))
+fashion_model.add(Dropout(0.4))
+fashion_model.add(Flatten())
+fashion_model.add(Dense(128, activation='linear'))
+fashion_model.add(LeakyReLU(alpha=0.1))           
+fashion_model.add(Dropout(0.3))
+fashion_model.add(Dense(num_classes, activation='softmax'))
+
+
+-----------------------------------------------------------------
+fashion_model.summary()
+
+-----------------------------------------------------------------
+fashion_model.compile(loss=keras.losses.categorical_crossentropy, optimizer=keras.optimizers.Adam(),metrics=['accuracy'])
+
+-----------------------------------------------------------------
+fashion_train_dropout = fashion_model.fit(train_X, train_label, batch_size=batch_size,epochs=epochs,verbose=1,validation_data=(valid_X, valid_label))
+
+-----------------------------------------------------------------
+fashion_model.save("fashion_model_dropout.h5py")
+
+-----------------------------------------------------------------
+test_eval = fashion_model.evaluate(test_X, test_Y_one_hot, verbose=1)
+
+-----------------------------------------------------------------
+print('Test loss:', test_eval[0])
+print('Test accuracy:', test_eval[1])
+
+-----------------------------------------------------------------
+accuracy = fashion_train_dropout.history['accuracy']
+val_accuracy = fashion_train_dropout.history['val_accuracy']
+loss = fashion_train_dropout.history['loss']
+val_loss = fashion_train_dropout.history['val_loss']
+epochs = range(len(accuracy))
+plt.plot(epochs, accuracy, 'bo', label='Training accuracy')
+plt.plot(epochs, val_accuracy, 'b', label='Validation accuracy')
+plt.title('Training and validation accuracy')
+plt.legend()
+plt.figure()
+plt.plot(epochs, loss, 'bo', label='Training loss')
+plt.plot(epochs, val_loss, 'b', label='Validation loss')
+plt.title('Training and validation loss')
+plt.legend()
+plt.show()
+
+-----------------------------------------------------------------
+predicted_classes = fashion_model.predict(test_X)
+
+-----------------------------------------------------------------
+predicted_classes = np.argmax(np.round(predicted_classes),axis=1)
+
+-----------------------------------------------------------------
+predicted_classes.shape, test_Y.shape
+
+-----------------------------------------------------------------
+correct = np.where(predicted_classes==test_Y)[0]
+print("Found %d correct labels" % len(correct))
+for i, correct in enumerate(correct[:9]):
+    plt.subplot(3,3,i+1)
+    plt.imshow(test_X[correct].reshape(28,28), cmap='gray', interpolation='none')
+    plt.title("Predicted {}, Class {}".format(predicted_classes[correct], test_Y[correct]))
+    plt.tight_layout()
+
+-----------------------------------------------------------------
+incorrect = np.where(predicted_classes!=test_Y)[0]
+print("Found %d incorrect labels" % len(incorrect))
+for i, incorrect in enumerate(incorrect[:9]):
+    plt.subplot(3,3,i+1)
+    plt.imshow(test_X[incorrect].reshape(28,28), cmap='gray', interpolation='none')
+    plt.title("Predicted {}, Class {}".format(predicted_classes[incorrect], test_Y[incorrect]))
+    plt.tight_layout()
+
+-----------------------------------------------------------------
+from sklearn.metrics import classification_report
+target_names = ["Class {}".format(i) for i in range(num_classes)]
+print(classification_report(test_Y, predicted_classes, target_names=target_names))
