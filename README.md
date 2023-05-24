@@ -20,4 +20,4 @@ Use GPU on colab and refer text file or else download the ipynb (do not copy tex
 ## For DL Assignments (datasets)
 - Ass1 - housing.csv
 - Ass2 - bag.png (for testing)
-- Ass3 - trainset.csv , testset.csv
+- Ass3 - Google_Stock_Price_Train_mam.csv for Mam's Assignment and Google_Stock_Price_Train.csv for my Assignment
