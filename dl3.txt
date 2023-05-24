@@ -3,7 +3,7 @@ import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
 import matplotlib.pyplot as plt
 
 -----------------------------------
-data=pd.read_csv("trainset.csv")
+data=pd.read_csv("Google_Stock_Price_Train.csv")
 data
 
 -----------------------------------
