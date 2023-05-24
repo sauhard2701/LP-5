@@ -3,13 +3,18 @@ import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
 import matplotlib.pyplot as plt
 
 -----------------------------------
-dataset_train = pd.read_csv("trainset.csv")
+data=pd.read_csv("trainset.csv")
+data
 
 -----------------------------------
-dataset_train
+train = data.iloc[:1260,:]
+test = data.iloc[1260:,:]
 
 -----------------------------------
-trainset = dataset_train.iloc[:,1:2].values
+train
+
+-----------------------------------
+trainset = train.iloc[:,1:2].values
 
 -----------------------------------
 trainset
@@ -73,17 +78,17 @@ regressor.compile(optimizer = 'adam',loss = 'mean_squared_error')
 regressor.fit(x_train,y_train,epochs = 100, batch_size = 32)
 
 -----------------------------------
-dataset_test =pd.read_csv("testset.csv")
+test
 
 -----------------------------------
-real_stock_price = dataset_test.iloc[:,1:2].values
+real_stock_price = test.iloc[:,1:2].values
 
 -----------------------------------
-dataset_total = pd.concat((dataset_train['Open'],dataset_test['Open']),axis = 0)
+dataset_total = pd.concat((train['Open'],test['Open']),axis = 0)
 dataset_total
 
 -----------------------------------
-inputs = dataset_total[len(dataset_total) - len(dataset_test)-60:].values
+inputs = dataset_total[len(dataset_total) - len(test)-60:].values
 inputs
 
 -----------------------------------
